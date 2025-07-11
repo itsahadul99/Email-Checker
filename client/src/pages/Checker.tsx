@@ -18,33 +18,33 @@ const Checker: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
 
- const verifyEmails = async (emails: string[]) => {
-  setIsLoading(true);
-  setError('');
-  setResults([]);
+  const verifyEmails = async (emails: string[]) => {
+    setIsLoading(true);
+    setError('');
+    setResults([]);
 
-  try {
-    const response = await fetch('http://localhost:5000/api/check-emails', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ emails }),
-    });
+    try {
+      const response = await fetch('https://email-checker-api.up.railway.app/api/check-emails', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ emails }),
+      });
 
-    if (!response.ok) {
-      throw new Error('API request failed');
+      if (!response.ok) {
+        throw new Error('API request failed');
+      }
+
+      const data = await response.json();
+      setResults(data);
+    } catch (err) {
+      setError('Failed to verify emails. Please try again.');
+      console.error('Verification error:', err);
+    } finally {
+      setIsLoading(false);
     }
-
-    const data = await response.json();
-    setResults(data);
-  } catch (err) {
-    setError('Failed to verify emails. Please try again.');
-    console.error('Verification error:', err);
-  } finally {
-    setIsLoading(false);
-  }
-};
+  };
 
   const handleSingleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -61,17 +61,75 @@ const Checker: React.FC = () => {
       .split('\n')
       .map(email => email.trim())
       .filter(email => email);
-    
+
     if (emailList.length === 0) {
       setError('Please enter at least one email address');
       return;
     }
     verifyEmails(emailList);
   };
+  const exportToCSV = () => {
+    if (!results || results.length === 0) return;
 
+    const headers = Object.keys(results[0]).join(',');
+    const rows = results.map(result =>
+      Object.values(result).map(value =>
+        `"${String(value).replace(/"/g, '""')}"`
+      ).join(',')
+    ).join('\n');
+
+    const csvContent = `data:text/csv;charset=utf-8,${headers}\n${rows}`;
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement('a');
+    link.setAttribute('href', encodedUri);
+    link.setAttribute('download', 'email_verification_results.csv');
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+  const exportToJSON = () => {
+    if (!results || results.length === 0) return;
+
+    const jsonString = JSON.stringify(results, null, 2);
+    const blob = new Blob([jsonString], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'email_verification_results.json';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+  const shareResults = async () => {
+    if (!results || results.length === 0) return;
+
+    try {
+      const jsonString = JSON.stringify(results, null, 2);
+
+      if (navigator.share) {
+        // For mobile devices
+        await navigator.share({
+          title: 'Email Verification Results',
+          text: 'Here are my email verification results:',
+          files: [new File([jsonString], 'results.json', { type: 'application/json' })]
+        });
+      } else {
+        // Fallback for desktop
+        const blob = new Blob([jsonString], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        window.open(url, '_blank');
+        URL.revokeObjectURL(url);
+      }
+    } catch (err) {
+      console.error('Sharing failed:', err);
+      // Fallback to download
+      exportToJSON();
+    }
+  };
   return (
     <div className="bg-gradient-to-br from-blue-50 to-indigo-100 py-12 px-4 sm:px-6 lg:px-8">
-      <motion.div 
+      <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
@@ -97,7 +155,7 @@ const Checker: React.FC = () => {
             >
               Single Email
               {activeTab === 'single' && (
-                <motion.div 
+                <motion.div
                   layoutId="tabIndicator"
                   className="absolute bottom-0 left-0 right-0 h-1 bg-blue-600"
                   transition={{ type: 'spring', bounce: 0.2, duration: 0.6 }}
@@ -110,7 +168,7 @@ const Checker: React.FC = () => {
             >
               Bulk Verification
               {activeTab === 'bulk' && (
-                <motion.div 
+                <motion.div
                   layoutId="tabIndicator"
                   className="absolute bottom-0 left-0 right-0 h-1 bg-blue-600"
                   transition={{ type: 'spring', bounce: 0.2, duration: 0.6 }}
@@ -226,7 +284,7 @@ const Checker: React.FC = () => {
 
             {/* Error Message */}
             {error && (
-              <motion.div 
+              <motion.div
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
                 className="mt-6 p-4 bg-red-50 border-l-4 border-red-500 text-red-700 rounded-r-lg"
@@ -254,7 +312,7 @@ const Checker: React.FC = () => {
 
                 {/* Summary Cards */}
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 mb-8">
-                  <motion.div 
+                  <motion.div
                     whileHover={{ y: -5 }}
                     className="bg-gradient-to-br from-blue-50 to-blue-100 p-5 rounded-xl border border-blue-200 shadow-sm"
                   >
@@ -271,7 +329,7 @@ const Checker: React.FC = () => {
                     </div>
                   </motion.div>
 
-                  <motion.div 
+                  <motion.div
                     whileHover={{ y: -5 }}
                     className="bg-gradient-to-br from-green-50 to-green-100 p-5 rounded-xl border border-green-200 shadow-sm"
                   >
@@ -290,7 +348,7 @@ const Checker: React.FC = () => {
                     </div>
                   </motion.div>
 
-                  <motion.div 
+                  <motion.div
                     whileHover={{ y: -5 }}
                     className="bg-gradient-to-br from-red-50 to-red-100 p-5 rounded-xl border border-red-200 shadow-sm"
                   >
@@ -309,7 +367,7 @@ const Checker: React.FC = () => {
                     </div>
                   </motion.div>
 
-                  <motion.div 
+                  <motion.div
                     whileHover={{ y: -5 }}
                     className="bg-gradient-to-br from-purple-50 to-purple-100 p-5 rounded-xl border border-purple-200 shadow-sm"
                   >
@@ -344,7 +402,7 @@ const Checker: React.FC = () => {
                       </thead>
                       <tbody className="bg-white divide-y divide-gray-200">
                         {results.map((result, index) => (
-                          <motion.tr 
+                          <motion.tr
                             key={index}
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
@@ -395,29 +453,37 @@ const Checker: React.FC = () => {
                 {/* Export Buttons */}
                 <div className="mt-8 flex flex-wrap gap-3">
                   <motion.button
+                    onClick={exportToCSV}
                     whileHover={{ scale: 1.03 }}
                     whileTap={{ scale: 0.98 }}
                     className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                    disabled={!results || results.length === 0}
                   >
                     <svg className="-ml-1 mr-2 h-5 w-5 text-gray-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
                       <path fillRule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clipRule="evenodd" />
                     </svg>
                     Download CSV
                   </motion.button>
+
                   <motion.button
+                    onClick={exportToJSON}
                     whileHover={{ scale: 1.03 }}
                     whileTap={{ scale: 0.98 }}
                     className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                    disabled={!results || results.length === 0}
                   >
                     <svg className="-ml-1 mr-2 h-5 w-5 text-gray-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
                       <path fillRule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clipRule="evenodd" />
                     </svg>
                     Download JSON
                   </motion.button>
+
                   <motion.button
+                    onClick={shareResults}
                     whileHover={{ scale: 1.03 }}
                     whileTap={{ scale: 0.98 }}
                     className="inline-flex items-center px-4 py-2 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                    disabled={!results || results.length === 0}
                   >
                     <svg className="-ml-1 mr-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
                       <path fillRule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clipRule="evenodd" />
