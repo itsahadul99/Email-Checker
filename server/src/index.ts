@@ -1,5 +1,5 @@
 // index.ts
-import express from 'express';
+import express, { Request, Response } from 'express';
 import dotenv from 'dotenv';
 import cors from 'cors';
 import { checkGmail } from './utils/emailChecker';
@@ -32,7 +32,7 @@ app.use(cors({
 app.use(express.json());
 
 // Modified to handle both single and bulk email checks
-app.post('/api/check-emails', async (req, res) => {
+app.post('/api/check-emails', async (req:Request, res:Response) => {
   const { emails } = req.body;
 
   if (!emails || !Array.isArray(emails) || emails.length === 0) {
