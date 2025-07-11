@@ -1,78 +1,58 @@
+// utils/emailChecker.ts
 import dns from 'dns/promises';
 import validator from 'email-validator';
-import { google } from 'googleapis';
 import dotenv from 'dotenv';
 
 dotenv.config();
 
-interface GmailCheckResult {
+interface EmailCheckResult {
   email: string;
-  format: boolean;
-  mx: boolean;
-  twoFactor: {
-    enabled: boolean | null;
-    details?: string;
-    error?: string;
-  } | null;
+  isValidFormat: boolean;
+  hasMxRecords: boolean;
+  hasTwoFA: boolean | null;
+  isDisposable: boolean;
+  isRoleAccount: boolean;
   error?: string;
 }
 
-export async function checkGmail(email: string): Promise<GmailCheckResult> {
-  const result: GmailCheckResult = {
+export async function checkGmail(email: string): Promise<EmailCheckResult> {
+  const result: EmailCheckResult = {
     email,
-    format: false,
-    mx: false,
-    twoFactor: null,
+    isValidFormat: false,
+    hasMxRecords: false,
+    hasTwoFA: null,
+    isDisposable: false,
+    isRoleAccount: false,
   };
 
-  const isValidEmail = validator.validate(email);
-  const isGmail = email.toLowerCase().endsWith('@gmail.com') || email.toLowerCase().endsWith('@googlemail.com');
-  result.format = isValidEmail && isGmail;
+  // Validate email format
+  result.isValidFormat = validator.validate(email);
 
-  if (!result.format) {
-    result.error = 'Invalid Gmail address';
+  if (!result.isValidFormat) {
+    result.error = 'Invalid email format';
     return result;
   }
 
+  // Check MX records
   const domain = email.split('@')[1];
   try {
     const mxRecords = await dns.resolveMx(domain);
-    result.mx = mxRecords.length > 0;
+    result.hasMxRecords = mxRecords.length > 0;
   } catch (err: any) {
     result.error = `MX Lookup failed: ${err.message}`;
     return result;
   }
 
-  // Check 2FA using Google Workspace Admin SDK (optional)
-  if (process.env.GOOGLE_CLIENT_EMAIL && process.env.GOOGLE_PRIVATE_KEY) {
-    try {
-      const auth = new google.auth.GoogleAuth({
-        credentials: {
-          client_email: process.env.GOOGLE_CLIENT_EMAIL,
-          private_key: process.env.GOOGLE_PRIVATE_KEY.replace(/\\n/g, '\n'),
-        },
-        scopes: ['https://www.googleapis.com/auth/admin.directory.user'],
-      });
+  // Mock checks for disposable and role accounts
+  const disposableDomains = ['mailinator.com', 'tempmail.com', 'throwawaymail.com'];
+  result.isDisposable = disposableDomains.includes(domain.toLowerCase());
 
-      const admin = google.admin({ version: 'directory_v1', auth });
-      const { data } = await admin.users.get({ userKey: email });
+  const roleKeywords = ['admin', 'support', 'info', 'sales', 'contact'];
+  const localPart = email.split('@')[0].toLowerCase();
+  result.isRoleAccount = roleKeywords.some(keyword => localPart.includes(keyword));
 
-      result.twoFactor = {
-        enabled: data.isEnrolledIn2Sv ?? false,
-        details: data.twoStepVerification ?? 'No details',
-      };
-    } catch (err: any) {
-      result.twoFactor = {
-        enabled: null,
-        error: `2FA check failed: ${err.message}`,
-      };
-    }
-  } else {
-    result.twoFactor = {
-      enabled: null,
-      error: 'Google credentials missing',
-    };
-  }
+  // Mock 2FA (since actual check isn't possible)
+  result.hasTwoFA = null; // or false, depending on frontend preference
 
   return result;
 }

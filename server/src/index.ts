@@ -1,3 +1,4 @@
+// index.ts
 import express from 'express';
 import dotenv from 'dotenv';
 import cors from 'cors';
@@ -11,14 +12,19 @@ const PORT = process.env.PORT || 5000;
 app.use(cors());
 app.use(express.json());
 
-app.post('/api/check-email', async (req, res) => {
-  const { email } = req.body;
+// Modified to handle both single and bulk email checks
+app.post('/api/check-emails', async (req, res) => {
+  const { emails } = req.body;
 
-  if (!email) return res.status(400).json({ error: 'Email is required' });
+  if (!emails || !Array.isArray(emails) || emails.length === 0) {
+    return res.status(400).json({ error: 'At least one email is required' });
+  }
 
   try {
-    const result = await checkGmail(email);
-    res.json(result);
+    const results = await Promise.all(
+      emails.map(async (email: string) => await checkGmail(email))
+    );
+    res.json(results);
   } catch (err: any) {
     res.status(500).json({ error: 'Server error', message: err.message });
   }

@@ -1,8 +1,9 @@
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 
 const CTA = () => {
+    const location = useLocation();
     return (
-        <section className="py-16 px-4 sm:px-6 lg:px-8 bg-gradient-to-r from-blue-600 to-indigo-700">
+        <section className={`${location.pathname === '/checker' ? "hidden": "py-16 px-4 sm:px-6 lg:px-8 bg-gradient-to-r from-blue-600 to-indigo-700"}`}>
             <div className="max-w-4xl mx-auto text-center">
                 <h2 className="text-3xl sm:text-4xl font-bold text-white mb-6">
                     Ready to Verify Your Emails?
