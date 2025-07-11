@@ -1,13 +1,22 @@
-import { useState } from 'react'
-import './App.css'
+import { Routes, Route } from 'react-router-dom'
+import Home from './pages/Home';
+import Checker from './pages/Checker';
+import Navbar from './components/Navbar';
+import About from './pages/About';
 
 function App() {
-  const [count, setCount] = useState(0)
-
   return (
-    <>
-     <h1 className='font-black text-5xl'>Testing the project with tailwind css</h1>    </>
-  )
+    <div>
+      <Navbar />
+      <div className="pt-16"> {/* Offset for fixed navbar */}
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/about" element={<About />} />
+          <Route path="/checker" element={<Checker />} />
+        </Routes>
+      </div>
+    </div>
+  );
 }
 
-export default App
+export default App;
