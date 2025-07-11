@@ -6,6 +6,7 @@ import About from './pages/About';
 import Footer from './components/Footer';
 import Features from './pages/Features';
 import Pricing from './pages/Pricing';
+import NotFound from './pages/NotFound';
 
 function App() {
   return (
@@ -18,6 +19,7 @@ function App() {
           <Route path="/checker" element={<Checker />} />
           <Route path="/features" element={<Features />} />
           <Route path="/pricing" element={<Pricing />} />
+          <Route path="*" element={<NotFound />} />
         </Routes>
       </div>
       <Footer />
