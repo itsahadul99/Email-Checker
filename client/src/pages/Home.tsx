@@ -6,12 +6,9 @@ import WhyChoiceUs from '../components/WhyChoiceUs';
 const Home: React.FC = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
-      {/* Hero Section */}
       <Banner />
-      {/* How It Works Section */}
       <HowItWork />
       <WhyChoiceUs />
-      {/* FAQ Section */}
       <FAQ />
     </div>
   );

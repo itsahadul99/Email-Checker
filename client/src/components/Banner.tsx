@@ -134,7 +134,7 @@ const Banner = ({ layoutType = "centered" }: BannerProps) => {
 
           {/* Content */}
           <motion.div
-            className="relative z-10 max-w-4xl w-full text-center bg-white/20 backdrop-blur-xl rounded-2xl p-8 sm:p-12 lg:p-16 shadow-2xl border border-white/40"
+            className="relative z-10 max-w-7xl w-full text-center bg-white/20 backdrop-blur-xl rounded-2xl p-8 sm:p-12 lg:p-16 shadow-2xl border border-white/40"
             variants={childVariants}
           >
             <motion.h1
@@ -165,7 +165,7 @@ const Banner = ({ layoutType = "centered" }: BannerProps) => {
               </motion.div>
               <motion.div variants={buttonVariants} whileHover="hover">
                 <Link
-                  to="#how-it-works"
+                  to="about"
                   className="inline-block border-2 border-indigo-600 text-indigo-600 px-8 py-4 rounded-xl text-lg font-semibold transition-all duration-300 hover:bg-indigo-50/50 hover:border-indigo-700"
                 >
                   Learn More

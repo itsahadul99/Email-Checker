@@ -32,5 +32,12 @@ A modern web application for validating Gmail addresses with format checking, MX
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/itsahadul99/email-checker.git
+   git clone https://github.com/itsahadul99/Email-Checker.git
    cd email-checker
+   ## For Client Side
+   cd client
+   npm install
+   ## For Server Side
+   cd server
+   npm install
+   

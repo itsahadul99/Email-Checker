@@ -76,11 +76,11 @@ const About: React.FC = () => {
             { name: 'React', icon: '⚛️', description: 'Frontend framework' },
             { name: 'TypeScript', icon: '📘', description: 'Type-safe JavaScript' },
             { name: 'Tailwind CSS', icon: '🎨', description: 'Utility-first CSS' },
+            { name: 'Framer Motion', icon: '🍃', description: 'Animation' },
             { name: 'Node.js', icon: '🟢', description: 'Backend runtime' },
             { name: 'Express', icon: '🚂', description: 'API framework' },
-            { name: 'MongoDB', icon: '🍃', description: 'Database' },
-            { name: 'Jest', icon: '🧪', description: 'Testing framework' },
             { name: 'GitHub', icon: '🐙', description: 'Version control' },
+            { name: 'Railway & Netlify', icon: '🧪', description: 'For Deployment' },
           ].map((tech, index) => (
             <div key={index} className="bg-gray-50 hover:bg-blue-50 rounded-lg p-4 text-center transition-colors duration-200 border border-gray-200">
               <div className="text-3xl mb-2">{tech.icon}</div>
