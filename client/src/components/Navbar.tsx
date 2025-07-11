@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, NavLink } from 'react-router-dom';
 
 const Navbar: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -26,7 +26,7 @@ const Navbar: React.FC = () => {
             <Link
               to="/"
               className="text-gray-700 hover:bg-gray-100 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium transition duration-150"
-              activeClassName="bg-blue-50 text-blue-700"
+             
             >
               Home
             </Link>
@@ -34,28 +34,28 @@ const Navbar: React.FC = () => {
             <Link
               to="/checker"
               className="text-gray-700 hover:bg-gray-100 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium transition duration-150"
-              activeClassName="bg-blue-50 text-blue-700"
+             
             >
               Email Checker
             </Link>
             <Link
               to="/about"
               className="text-gray-700 hover:bg-gray-100 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium transition duration-150"
-              activeClassName="bg-blue-50 text-blue-700"
+             
             >
               About
             </Link>
             <Link
               to="/features"
               className="text-gray-700 hover:bg-gray-100 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium transition duration-150"
-              activeClassName="bg-blue-50 text-blue-700"
+             
             >
               Features
             </Link>
             <Link
               to="/pricing"
               className="text-gray-700 hover:bg-gray-100 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium transition duration-150"
-              activeClassName="bg-blue-50 text-blue-700"
+             
             >
               Pricing
             </Link>
