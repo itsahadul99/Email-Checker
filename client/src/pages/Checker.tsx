@@ -5,9 +5,12 @@ interface VerificationResult {
   email: string;
   isValidFormat: boolean;
   hasMxRecords: boolean;
-  hasTwoFA: boolean;
   isDisposable: boolean;
   isRoleAccount: boolean;
+  isFreeProvider: boolean;
+  isCorporate: boolean;
+  isHighRiskDomain: boolean;
+  error?: string;
 }
 
 const Checker: React.FC = () => {
@@ -24,7 +27,7 @@ const Checker: React.FC = () => {
     setResults([]);
 
     try {
-      const response = await fetch('https://email-checker-api.up.railway.app/api/check-emails', {
+      const response = await fetch('http://localhost:5000/api/check-emails', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -33,7 +36,7 @@ const Checker: React.FC = () => {
       });
 
       if (!response.ok) {
-        throw new Error('API request failed');
+        throw new Error(`API request failed with status ${response.status}`);
       }
 
       const data = await response.json();
@@ -68,6 +71,7 @@ const Checker: React.FC = () => {
     }
     verifyEmails(emailList);
   };
+
   const exportToCSV = () => {
     if (!results || results.length === 0) return;
 
@@ -87,6 +91,7 @@ const Checker: React.FC = () => {
     link.click();
     document.body.removeChild(link);
   };
+
   const exportToJSON = () => {
     if (!results || results.length === 0) return;
 
@@ -101,6 +106,7 @@ const Checker: React.FC = () => {
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
   };
+
   const shareResults = async () => {
     if (!results || results.length === 0) return;
 
@@ -108,14 +114,12 @@ const Checker: React.FC = () => {
       const jsonString = JSON.stringify(results, null, 2);
 
       if (navigator.share) {
-        // For mobile devices
         await navigator.share({
           title: 'Email Verification Results',
           text: 'Here are my email verification results:',
           files: [new File([jsonString], 'results.json', { type: 'application/json' })]
         });
       } else {
-        // Fallback for desktop
         const blob = new Blob([jsonString], { type: 'application/json' });
         const url = URL.createObjectURL(blob);
         window.open(url, '_blank');
@@ -123,10 +127,39 @@ const Checker: React.FC = () => {
       }
     } catch (err) {
       console.error('Sharing failed:', err);
-      // Fallback to download
       exportToJSON();
     }
   };
+
+  const renderStatusBadge = (valid: boolean) => (
+    <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+      valid ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+    }`}>
+      {valid ? 'Valid' : 'Invalid'}
+    </span>
+  );
+
+  const renderTypeBadge = (result: VerificationResult) => (
+    <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+      result.isCorporate ? 'bg-blue-100 text-blue-800' : 
+      result.isFreeProvider ? 'bg-purple-100 text-purple-800' : 
+      'bg-gray-100 text-gray-800'
+    }`}>
+      {result.isCorporate ? 'Corporate' : result.isFreeProvider ? 'Free' : 'Unknown'}
+    </span>
+  );
+
+  const renderRiskBadge = (result: VerificationResult) => (
+    <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+      result.isHighRiskDomain ? 'bg-red-100 text-red-800' : 
+      result.isDisposable ? 'bg-yellow-100 text-yellow-800' : 
+      'bg-green-100 text-green-800'
+    }`}>
+      {result.isHighRiskDomain ? 'High Risk' : 
+       result.isDisposable ? 'Disposable' : 'Low Risk'}
+    </span>
+  );
+
   return (
     <div className="bg-gradient-to-br from-blue-50 to-indigo-100 py-12 px-4 sm:px-6 lg:px-8">
       <motion.div
@@ -138,10 +171,10 @@ const Checker: React.FC = () => {
         {/* Header */}
         <div className="text-center mb-10">
           <h1 className="text-4xl sm:text-5xl font-bold text-gray-800 mb-3 bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-indigo-600">
-            Gmail Validator Pro
+            Email Validator Pro
           </h1>
           <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-            Verify email authenticity with our advanced validation technology
+            Advanced email verification with comprehensive validation checks
           </p>
         </div>
 
@@ -246,7 +279,7 @@ const Checker: React.FC = () => {
                         id="emails"
                         value={bulkEmails}
                         onChange={(e) => setBulkEmails(e.target.value)}
-                        placeholder={`user1@gmail.com\nuser2@googlemail.com\nuser3@gmail.com`}
+                        placeholder={`user1@gmail.com\nuser2@company.com\nuser3@mailinator.com`}
                         rows={8}
                         className="block w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm font-mono"
                         required
@@ -350,18 +383,18 @@ const Checker: React.FC = () => {
 
                   <motion.div
                     whileHover={{ y: -5 }}
-                    className="bg-gradient-to-br from-red-50 to-red-100 p-5 rounded-xl border border-red-200 shadow-sm"
+                    className="bg-gradient-to-br from-indigo-50 to-indigo-100 p-5 rounded-xl border border-indigo-200 shadow-sm"
                   >
                     <div className="flex items-center">
-                      <div className="p-3 rounded-lg bg-red-100 text-red-600">
+                      <div className="p-3 rounded-lg bg-indigo-100 text-indigo-600">
                         <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                         </svg>
                       </div>
                       <div className="ml-4">
-                        <p className="text-sm font-medium text-gray-600">Invalid</p>
+                        <p className="text-sm font-medium text-gray-600">Corporate</p>
                         <p className="text-2xl font-semibold text-gray-800">
-                          {results.filter(r => !r.isValidFormat || !r.hasMxRecords).length}
+                          {results.filter(r => r.isCorporate).length}
                         </p>
                       </div>
                     </div>
@@ -369,18 +402,18 @@ const Checker: React.FC = () => {
 
                   <motion.div
                     whileHover={{ y: -5 }}
-                    className="bg-gradient-to-br from-purple-50 to-purple-100 p-5 rounded-xl border border-purple-200 shadow-sm"
+                    className="bg-gradient-to-br from-red-50 to-red-100 p-5 rounded-xl border border-red-200 shadow-sm"
                   >
                     <div className="flex items-center">
-                      <div className="p-3 rounded-lg bg-purple-100 text-purple-600">
+                      <div className="p-3 rounded-lg bg-red-100 text-red-600">
                         <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                         </svg>
                       </div>
                       <div className="ml-4">
-                        <p className="text-sm font-medium text-gray-600">2FA Enabled</p>
+                        <p className="text-sm font-medium text-gray-600">High Risk</p>
                         <p className="text-2xl font-semibold text-gray-800">
-                          {results.filter(r => r.hasTwoFA).length}
+                          {results.filter(r => r.isHighRiskDomain).length}
                         </p>
                       </div>
                     </div>
@@ -397,7 +430,8 @@ const Checker: React.FC = () => {
                           <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                           <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Format</th>
                           <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">MX</th>
-                          <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">2FA</th>
+                          <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
+                          <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Risk</th>
                         </tr>
                       </thead>
                       <tbody className="bg-white divide-y divide-gray-200">
@@ -424,24 +458,19 @@ const Checker: React.FC = () => {
                               </div>
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap">
-                              <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${result.isValidFormat && result.hasMxRecords ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
-                                {result.isValidFormat && result.hasMxRecords ? 'Valid' : 'Invalid'}
-                              </span>
+                              {renderStatusBadge(result.isValidFormat && result.hasMxRecords)}
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap">
-                              <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${result.isValidFormat ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
-                                {result.isValidFormat ? 'Valid' : 'Invalid'}
-                              </span>
+                              {renderStatusBadge(result.isValidFormat)}
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap">
-                              <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${result.hasMxRecords ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
-                                {result.hasMxRecords ? 'Found' : 'Missing'}
-                              </span>
+                              {renderStatusBadge(result.hasMxRecords)}
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap">
-                              <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${result.hasTwoFA ? 'bg-purple-100 text-purple-800' : 'bg-gray-100 text-gray-800'}`}>
-                                {result.hasTwoFA ? 'Enabled' : 'Disabled'}
-                              </span>
+                              {renderTypeBadge(result)}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              {renderRiskBadge(result)}
                             </td>
                           </motion.tr>
                         ))}

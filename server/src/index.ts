@@ -2,7 +2,7 @@
 import express, { Request, Response } from 'express';
 import dotenv from 'dotenv';
 import cors from 'cors';
-import { checkGmail } from './utils/emailChecker';
+import emailChecker from './utils/emailChecker';
 
 dotenv.config();
 
@@ -41,7 +41,7 @@ app.post('/api/check-emails', async (req:Request, res:Response) => {
 
   try {
     const results = await Promise.all(
-      emails.map(async (email: string) => await checkGmail(email))
+      emails.map(async (email: string) => await emailChecker(email))
     );
     res.json(results);
   } catch (err: any) {
